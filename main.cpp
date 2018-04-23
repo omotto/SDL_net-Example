@@ -12,6 +12,7 @@ class UDPConnection {
 		int createPacket(int packetSize);
 		int sendData(const std::string &str);
 		int checkForData(void);
+		UDPpacket * getPacket(void);
 	private:
 		int error;
 		UDPsocket ourSocket;
@@ -48,7 +49,7 @@ UDPConnection::UDPConnection(const std::string &ip, int32_t remotePort, int32_t 
 }
 	
 UDPConnection::~UDPConnection() {
-	SDLNet_FreePacket(packet);
+	SDLNet_FreePacket(this->packet);
 	SDLNet_Quit();
 }
 
@@ -93,16 +94,23 @@ int UDPConnection::checkForData(void) {
 	numrecv = SDLNet_UDP_Recv(this->ourSocket, this->packet);
 	switch (numrecv) {
 		case 0:
-			std::cout  << "No data received!" << std::endl;
+			std::cout << "No data received!" << std::endl;
 		break;
 		case 1:
-			std::cout << "Data received: " << packet->data << std::endl;
+			std::cout << "Data received: " << this->packet->data << std::endl;
 		break;
 		case -1:
 			std::cout << "SDLNet_UDP_Recv failed : " << SDLNet_GetError() << std::endl;
 		break;
+		default:
+			std::cout << "Unexpected return value : " << numrecv << std:endl;
+		break;
 	}
 	return numrecv;
+}
+
+UDPpacket * UDPConnection::getPacket(void) {
+	return this->packet;
 }
 
 int main(int argc, char **argv) {
@@ -115,6 +123,9 @@ int main(int argc, char **argv) {
 	udpConnection.createPacket(512);
 	udpConnection.sendData("This is a test");
 	udpConnection.checkForData();
+		
+	std::cout << "Received packet message : " << udpConnection.getPacket()->data << std::endl;
+	std::cout << "Received packet length  : " << udpConnection.getPacket()->len << std::endl;
 	
 	return 0;
 }
